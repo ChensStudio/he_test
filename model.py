@@ -117,9 +117,9 @@ def BenmarkModel(df):
 
     # Feature columns describe how to use the input.
     # We are adding one numeric feature for each column of the training data
-    my_feature_columns = []
-    for key in X_test.keys():
-        my_feature_columns.append(tf.feature_column.numeric_column(key=key))
+    my_feature_columns = [
+        tf.feature_column.numeric_column(key=key) for key in X_test.keys()
+    ]
     
     opti = tf.optimizers.Adam(learning_rate = 0.01)
 
@@ -144,17 +144,18 @@ def BenmarkModel(df):
 
     print(result_eval)
 
-    predictions=[]
-    for pred in estimator.predict(input_fn=eval_input_func):
-        predictions.append(np.array(pred['predictions']).astype(float))
+    predictions = [
+        np.array(pred['predictions']).astype(float)
+        for pred in estimator.predict(input_fn=eval_input_func)
+    ]
         
     from sklearn.metrics import mean_squared_error
     np.sqrt(mean_squared_error(y_test, predictions))**0.5
 
     y_test = np.array(y_test.values.tolist())
 
-    accuracy=0
-    for i in range(len(predictions)):
-        if abs(predictions[i][0])-abs(y_test[i])<0.95:
-            accuracy+=1
+    accuracy = sum(
+        abs(predictions[i][0]) - abs(y_test[i]) < 0.95
+        for i in range(len(predictions))
+    )
     print("Un-encrypted accuracy: ", accuracy/float(len(y_test)))
